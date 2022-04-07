@@ -25,9 +25,9 @@ deploy-job:
     - docker:18.09.7-dind
   before_script:
     - echo $CI_REGISTRY
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN https://gitlab.serverr.space
   script:
     - echo "Pushing image"
-    - docker build -t $CI_REGISTRY/group/project/image:latest .
-    - docker push $CI_REGISTRY/group/project/image:latest
+    - docker build -t https://gitlab.serverr.space/group/project/image:latest .
+    - docker push https://gitlab.serverr.space/group/project/image:latest
     - echo "Image pushed sucessfully"
