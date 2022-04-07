@@ -1,11 +1,13 @@
 stages:
   - build
 
+image: gitlab/dind
+
 build-job:
-  image: python:3.10
   stage: build
   script:
     - echo "Test"
+    - apt-get install python3
     - echo "Compiling the code..."
     - docker build -t DiscordBot .
     - echo "Compiling done"
