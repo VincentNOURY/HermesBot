@@ -6,6 +6,9 @@ image: debian:latest
 
 build-job:
   stage: build
+  image: docker:latest
+  services:
+    - docker:18.09.7-dind
   script:
     - echo "Test"
     - echo "Compiling the code..."
