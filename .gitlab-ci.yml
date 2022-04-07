@@ -28,5 +28,5 @@ deploy-job:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN https://gitlab.serverr.space
   script:
     - echo "Pushing image"
-    - docker push https://gitlab.serverr.space/group/project/image:latest
+    - docker push https://gitlab.serverr.space/Zarby/vtbot/image:latest
     - echo "Image pushed sucessfully"
