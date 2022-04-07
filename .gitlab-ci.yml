@@ -1,5 +1,6 @@
 stages:
   - build
+  - deploy
   
 image: debian:latest
   
@@ -14,7 +15,15 @@ build-job:
     - ls /builds/Zarby/vtbot/.git/
     - cd /builds/Zarby/vtbot/
     - echo "Compiling the code..."
-    - docker build -t $CI_REGISTRY_IMAGE .
+    - docker build -t vtbot .
     - echo "Compiling done"
+
+deploy-job:
+  stage: deploy
+  image: docker:latest
+  services:
+    - docker:18.09.7-dind
+  script:
     - echo "Pushing image"
-    - docker push $CI_REGISTRY_IMAGE:latest
+    - docker push vtbot:latest
+    - echo "Image pushed sucessfully"
