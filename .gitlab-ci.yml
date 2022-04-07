@@ -2,7 +2,7 @@ stages:
   - build
 
 build-job:
-  image: gitlab/dind
+  image: docker:stable
   stage: build
   script:
     - echo "Test"
