@@ -8,7 +8,9 @@ build-job:
   stage: build
   image: docker:19.03.1
   script:
-    - echo "Test"
+    - ls /builds/Zarby/vtbot/
+    - ls /builds/Zarby/vtbot/.git/
+    - cd /builds/Zarby/vtbot/
     - echo "Compiling the code..."
     - docker build -t vtbot .
     - echo "Compiling done"
