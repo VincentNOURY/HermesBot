@@ -1,18 +1,14 @@
 stages:
   - build
   
-image: docker:latest
-
-services:
-  - docker:dind
+image: debian:latest
 
 before_script:
-  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  - apt-get install docker
 
 build-job:
   stage: build
   script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
     - echo "Test"
     - echo "Compiling the code..."
     - docker build -t DiscordBot .
