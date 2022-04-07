@@ -1,6 +1,5 @@
 stages:
   - build
-  - deploy
   
 image: debian:latest
   
@@ -17,17 +16,3 @@ build-job:
     - echo "Compiling the code..."
     - docker build -t vtbot .
     - echo "Compiling done"
-
-deploy-job:
-  stage: deploy
-  image: docker:latest
-  services:
-    - docker:18.09.7-dind
-  before_script:
-    - echo $CI_REGISTRY
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN https://gitlab.serverr.space
-  script:
-    - echo "Pushing image"
-    - echo "$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest"
-    - docker push $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
-    - echo "Image pushed sucessfully"
