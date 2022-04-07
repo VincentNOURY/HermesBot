@@ -2,6 +2,7 @@ stages:
   - build
 
 build-job:
+  image: python:3.10
   stage: build
   script:
     - echo "Compiling the code..."
