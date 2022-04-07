@@ -25,5 +25,5 @@ deploy-job:
     - docker:18.09.7-dind
   script:
     - echo "Pushing image"
-    - docker push vtbot:latest
+    - docker push https://gitlab.serverr.space/group/project/vtbot:latest
     - echo "Image pushed sucessfully"
