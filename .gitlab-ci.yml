@@ -1,9 +1,8 @@
 stages:
   - build
 
-image: gitlab/dind
-
 build-job:
+  image: gitlab/dind
   stage: build
   script:
     - echo "Test"
