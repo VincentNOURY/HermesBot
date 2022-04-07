@@ -12,5 +12,5 @@ build-job:
   script:
     - echo "Test"
     - echo "Compiling the code..."
-    - docker build -t DiscordBot .
+    - docker build -t vtbot .
     - echo "Compiling done"
