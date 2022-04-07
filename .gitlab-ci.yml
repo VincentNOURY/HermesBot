@@ -5,6 +5,7 @@ build-job:
   image: python:3.10
   stage: build
   script:
+    - echo "Test"
     - echo "Compiling the code..."
     - docker build -t DiscordBot .
     - echo "Compiling done"
