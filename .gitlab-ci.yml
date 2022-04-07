@@ -14,5 +14,7 @@ build-job:
     - ls /builds/Zarby/vtbot/.git/
     - cd /builds/Zarby/vtbot/
     - echo "Compiling the code..."
-    - docker build -t vtbot .
+    - docker build -t $CI_REGISTRY_IMAGE .
     - echo "Compiling done"
+    - echo "Pushing image"
+    - docker push $CI_REGISTRY_IMAGE:latest
