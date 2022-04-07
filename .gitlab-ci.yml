@@ -7,7 +7,6 @@ image: debian:latest
 build-job:
   stage: build
   script:
-    - apt-get install docker
     - echo "Test"
     - echo "Compiling the code..."
     - docker build -t DiscordBot .
