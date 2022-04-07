@@ -6,7 +6,9 @@ image: debian:latest
 
 build-job:
   stage: build
-  image: docker:19.03.1
+  image: docker:latest
+  services:
+    - docker:18.09.7-dind
   script:
     - ls /builds/Zarby/vtbot/
     - ls /builds/Zarby/vtbot/.git/
