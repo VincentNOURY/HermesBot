@@ -25,5 +25,6 @@ deploy-job:
     - docker:18.09.7-dind
   script:
     - echo "Pushing image"
-    - docker push https://gitlab.serverr.space/group/project/vtbot:latest
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE
     - echo "Image pushed sucessfully"
