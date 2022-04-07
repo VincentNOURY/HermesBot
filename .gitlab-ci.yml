@@ -24,6 +24,7 @@ deploy-job:
   services:
     - docker:18.09.7-dind
   before_script:
+    - echo $CI_REGISTRY
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
   script:
     - echo "Pushing image"
