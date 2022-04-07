@@ -7,7 +7,6 @@ build-job:
   stage: build
   script:
     - echo "Test"
-    - sudo apt-get install python3
     - echo "Compiling the code..."
     - docker build -t DiscordBot .
     - echo "Compiling done"
