@@ -124,7 +124,7 @@ class Messenger:
         self.ws.send(json.dumps(payload))
         message = self.get_message()
         self.op_code_treatment(message)
-        self.get_all_infos(event)
+        self.get_all_infos(message)
         self.log('debug', "Reconnected")
 
     def identify(self):
