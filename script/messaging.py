@@ -33,8 +33,12 @@ class Messenger:
         if message:
             return json.loads(message)
 
-    def send_message(self, channel_id, message):
-        data = {"content": message}
+    def send_message(self, channel_id, message, guild_id = "", message_id = ""):
+        data = {"content": message,
+                "message_id" : message_id,
+                "guild_id" : guild_id
+                }
+
         req2 = requests.post(
                 url=f"https://discord.com/api/channels/{channel_id}/messages",
                 headers=self.HEADERS, json=data)
@@ -101,7 +105,7 @@ class Messenger:
     def reconnect(self):
         self.log("debug", "Reconnecting")
         self.ws.close()
-        seld.log("trace", "Connectiong closed")
+        self.log("trace", "Connectiong closed")
         self.connect()
 
         payload = {
@@ -117,6 +121,7 @@ class Messenger:
         message = self.get_message()
         self.op_code_treatment(message)
         self.get_all_infos(event)
+        self.log('debug', "Reconnected")
 
     def identify(self):
         payload = {
@@ -160,12 +165,16 @@ class Messenger:
             self.log('debug', "Re-identifying")
             self.log('trace', f"event : {event}")
             self.identify()
+        elif op_code == 7:
+            self.log('debug', "op code 7 received")
+            self.reconnect()
         elif op_code == 0:
             if event['t'] == "GUILD_CREATE":
                 pass
             elif event['t'] == "READY":
                 self.session_id = event['d']['session_id']
                 self.log('trace', f"event : {event}")
+                self.send_message(956409767591542794, "READY", message_id = 961823986621231165)
         elif op_code == 1:
             self.send_heartbeat()
             self.log('trace', f"event : {event}")
