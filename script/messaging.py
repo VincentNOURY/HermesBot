@@ -36,7 +36,8 @@ class Messenger:
     def send_message(self, channel_id, message, guild_id = "", message_id = ""):
         data = {"content": message,
                 "message_id" : message_id,
-                "guild_id" : guild_id
+                "guild_id" : guild_id,
+                "channel_id" : channel_id
                 }
 
         req2 = requests.post(
