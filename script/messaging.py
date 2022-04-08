@@ -35,11 +35,11 @@ class Messenger:
 
     def send_message(self, channel_id, message, guild_id = "", message_id = ""):
         data = {"content": message,
-                "message_reference":{
-                    "message_id" : message_id,
-                    "guild_id" : guild_id,
-                    "channel_id" : channel_id
-                    }
+                "message_reference": {
+                    "channel_id": channel_id,
+                    "guild_id": guild_id,
+                    "message_id": message_id
+                }
                 }
 
         req2 = requests.post(
@@ -177,7 +177,7 @@ class Messenger:
             elif event['t'] == "READY":
                 self.session_id = event['d']['session_id']
                 self.log('trace', f"event : {event}")
-                self.send_message(956409767591542794, "READY", message_id = 961823986621231165)
+                self.send_message("956409767591542794", "READY", message_id = "961823986621231165")
         elif op_code == 1:
             self.send_heartbeat()
             self.log('trace', f"event : {event}")
