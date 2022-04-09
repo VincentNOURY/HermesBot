@@ -103,7 +103,6 @@ class Messenger:
         event = self.get_message()
         self.heartbeat_interval = event['d']['heartbeat_interval'] / 1000
         self.log('none', f"Heartbeat interval : {self.heartbeat_interval}")
-        threading._start_new_thread(self.heartbeat, ())
         self.log('none', "Connected")
 
     def reconnect(self):
@@ -186,6 +185,7 @@ class Messenger:
 
     def start(self):
         self.connect()
+        threading._start_new_thread(self.heartbeat, ())
 
         self.identify()
 
