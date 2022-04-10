@@ -112,7 +112,7 @@ class Movies:
         req = self.session.post(url = url, headers = self.HEADERS, json = payload)
         if req.status_code == 201:
             self.log('debug', "movie added")
-            self.log('debug', req.text)
+            self.log('trace', req.text)
             return "Movie added"
         elif req.status_code == 500:
             self.log('debug', "Movie already available")
