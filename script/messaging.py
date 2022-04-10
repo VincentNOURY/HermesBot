@@ -50,14 +50,14 @@ class Messenger:
         url = f"{self.api_endpoint}/channels/{channel_id}/messages/{message_id}/reactions/{reaction}/@me",
         headers = self.HEADERS)
         self.log('trace', f"Status code : {req.status_code}\nText : {req.text}")
-        if req.status_code != 204:
-            self.log('error', "An error as occured")
-            self.log('error', f"Status code : {req.status_code}\nText : {req.text}")
-        elif req.status_code == 429:
+        if req.status_code == 429:
             self.log('error', "Rate limited")
             sleep(0.5)
             self.log('debug', "Re-sending")
             self.send_reaction(channel_id, message_id, reaction)
+        elif req.status_code != 204:
+            self.log('error', "An error as occured")
+            self.log('error', f"Status code : {req.status_code}\nText : {req.text}")
 
 
     def send_message(
