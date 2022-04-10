@@ -53,6 +53,11 @@ class Messenger:
         if req.status_code != 204:
             self.log('error', "An error as occured")
             self.log('error', f"Status code : {req.status_code}\nText : {req.text}")
+        elif req.status_code == 429:
+            self.log('error', "Rate limited")
+            sleep(0.5)
+            self.log('debug', "Re-sending")
+            self.send_reaction(channel_id, message_id, reaction)
 
 
     def send_message(
