@@ -28,13 +28,17 @@ def help_message(channel_id):
     messenger.send_message(channel_id, help_message)
 
 def movie_search(search, channel_id, guild_id = None, message_id = None):
-    movies.search_movie(search)
+    movies.search_movie(search, channel_id)
 
     title = movies.get_title()
     description = movies.get_description()
     media_id = movies.get_media_id()
     media_type = movies.get_media_type()
     poster = movies.get_poster()
+
+
+    if not(title and description and media_id and media_type and poster):
+        return False
 
     with open(f"movies/{title}.png" , "wb") as file:
         file.write(poster)
@@ -151,7 +155,7 @@ if __name__ == '__main__':
     messenger = Messenger(conf['Discord_token'], logger)
     messenger.start()
     shopping_list = Shopping_list(messenger, writer)
-    movies = Movies(conf['overseerr_endpoint'], conf['PLEX_TOKEN'], logger)
+    movies = Movies(conf['overseerr_endpoint'], conf['PLEX_TOKEN'], logger, messenger)
 
 
 
