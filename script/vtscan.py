@@ -21,10 +21,16 @@ class Vtscan:
         header = {'x-apikey' : self.api_key}
         files = {'file' : (self.file_path, open(self.file_path, 'rb'))}
         post_request = requests.post(api_post_light, headers = header, files = files)
-        #print(post_request.text)
+        if post_request.status_code == 429:
+            self.messenger.send_message(channel_id, "VirusTotal rate limited sorry")
+            self.log('error', "VirusTotal rate limited")
+            raise
+        elif post_request.status_code != 200:
+            self.log('error', f"Status code {post_request.status_code} received, {post_request.text}")
+            raise
         dict = post_request.json()['data']
         id = dict['id']
-        #print(f"recieved id of posted file, id={id}")
+
         analyses_link = "https://www.virustotal.com/api/v3/analyses/" + id
         sleep(1)
 
