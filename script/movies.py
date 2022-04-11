@@ -21,11 +21,11 @@ class Movies:
 
         self.log = logger.log
 
-        self.title = ""
-        self.description = ""
-        self.media_id = ""
-        self.media_type = ""
-        self.poster = ""
+        self.title = None
+        self.description = None
+        self.media_id = None
+        self.media_type = None
+        self.poster = None
 
         self.session = requests.Session()
         self.messenger = messenger;

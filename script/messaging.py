@@ -270,7 +270,6 @@ class Messenger:
             elif event['t'] == "READY":
                 self.session_id = event['d']['session_id']
                 self.log('trace', f"event : {event}")
-                self.send_message("956409767591542794", "READY", "946241187080187934", message_id = "961823986621231165")
             elif event['t'] == "MESSAGE_REACTION_ADD":
                 self.reaction_handling(event['d'])
                 self.get_all_infos(event)
