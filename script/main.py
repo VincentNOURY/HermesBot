@@ -105,7 +105,7 @@ def main():
             messenger.send_message(channel_id, "Scanning ...", guild_id, message_id)
             threads_list = []
             for i in range(len(attachments)):
-                threads_list.append(Thread(target=Vtscan(conf["Vt_api_key"], messenger, attachments[i]["url"], channel_id, message_id, guild_id).scan))
+                threads_list.append(Thread(target=Vtscan(conf["Vt_api_key"], messenger, logger, attachments[i]["url"], channel_id, message_id, guild_id).scan))
             [thread.start() for thread in threads_list]
 
     elif message == "!create":

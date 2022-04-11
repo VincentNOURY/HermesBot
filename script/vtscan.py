@@ -7,7 +7,7 @@ from time import sleep
 
 class Vtscan:
 
-    def __init__(self, api_key, messenger, url, channel_id, message_id, guild_id):
+    def __init__(self, api_key, messenger, logger, url, channel_id, message_id, guild_id):
         self.api_key = api_key
         self.channel_id = channel_id
         self.messenger = messenger
@@ -15,6 +15,7 @@ class Vtscan:
         self.guild_id = guild_id
         self.file_path = ""
         self.url = url
+        self.log = logger.log
 
     def virus_total_api_calls(self):
         api_post_light = "https://www.virustotal.com/api/v3/files"
@@ -38,7 +39,7 @@ class Vtscan:
         new_dict = get_request.json()['data']['attributes']
 
         while new_dict['status'] != "completed":
-            print("waiting more")
+            self.log("debug", "waiting more")
             sleep(69)
             get_request = requests.get(analyses_link, headers = header)
             new_dict = get_request.json()['data']['attributes']
