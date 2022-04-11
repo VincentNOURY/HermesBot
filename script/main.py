@@ -52,8 +52,8 @@ def movie_search(search, channel_id, guild_id = None, message_id = None):
 
     logger.log('trace', f"Embeds parameters : {embed_params}")
 
-    messenger.send_message(channel_id, message, embed = True, embed_params = embed_params)
-    messenger.send_message(channel_id, title, guild_id, message_id, files=[f"movies/{title}.png"])
+    messenger.send_embed(channel_id, embed_params)
+    messenger.send_files(channel_id, [f"movies/{title}.png"], guild_id, message_id)
 
     message_id = messenger.getMessageId()
     sleep(1)

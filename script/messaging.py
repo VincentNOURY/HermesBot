@@ -60,14 +60,67 @@ class Messenger:
             self.log('error', f"Status code : {req.status_code}\nText : {req.text}")
 
 
+    def send_embed(
+        self,
+        channel_id,
+        embed_params,
+        guild_id = None,
+        message_id = None
+    ):
+
+        fields = [{'name' : field['name'], 'value' : field['value']} for field in embed_params['fields']]
+        payload = {
+              "content": "",
+              "embed": {
+                "title": embed_params['title'],
+                "url": "",
+                "description": embed_params['description'],
+                "color": embed_params['color'],
+                "fields": fields
+                }
+            }
+
+        request = requests.post(
+            url=f"{self.api_endpoint}/channels/{channel_id}/messages",
+            headers=self.HEADERS, json=payload)
+        self.status_code_checker(request)
+
+    def send_files(
+        self,
+        channel_id,
+        files,
+        guild_id = None,
+        message_id = None
+    ):
+
+        payload = []
+        files_dict = {}
+        for index, file in enumerate(files):
+            filename = file.split("/")[-1]
+            payload.append({
+                'Content-Disposition': 'form-data; ' + \
+                f'name="file{index}"; filename="{filename}"',
+                'Content-Type': 'image/png',
+            })
+            files_dict[f"file{index}"] = open(file, 'rb')
+        request = requests.post(
+            url=f"{self.api_endpoint}/channels/{channel_id}/messages",
+            headers=self.ATTACHMENTS_HEADERS, data = payload, files = files_dict)
+        self.status_code_checker(request)
+
+    def status_code_checker(self, request):
+        if request.status_code != 200:
+            self.log('trace',
+            f"req status code : {req2.status_code}" + \
+            f"\nreq text : {req2.text}\nHeaders : {req2.headers}")
+
+
     def send_message(
         self,
         channel_id,
         message,
         guild_id = None,
         message_id = None,
-        embed = False,
-        embed_params = None,
         files = None
     ):
 
@@ -80,46 +133,11 @@ class Messenger:
                 "message_id": message_id
                 }
 
-        if embed and embed_params:
+        request = requests.post(
+            url=f"{self.api_endpoint}/channels/{channel_id}/messages",
+            headers=self.HEADERS, json=payload)
+        self.status_code_checker(request)
 
-            fields = [{'name' : field['name'], 'value' : field['value']} for field in embed_params['fields']]
-            payload = {
-                  "content": "",
-                  "embed": {
-                    "title": embed_params['title'],
-                    "url": "",
-                    "description": embed_params['description'],
-                    "color": embed_params['color'],
-                    "fields": fields
-                    }
-                }
-
-            req2 = requests.post(
-                url=f"{self.api_endpoint}/channels/{channel_id}/messages",
-                headers=self.HEADERS, json=payload)
-
-        elif files:
-            payload = []
-            files_dict = {}
-            for index, file in enumerate(files):
-                filename = file.split("/")[-1]
-                payload.append({
-                    'Content-Disposition': 'form-data; ' + \
-                    f'name="file{index}"; filename="{filename}"',
-                    'Content-Type': 'image/png',
-                })
-                files_dict[f"file{index}"] = open(file, 'rb')
-            req2 = requests.post(
-                url=f"{self.api_endpoint}/channels/{channel_id}/messages",
-                headers=self.ATTACHMENTS_HEADERS, data = payload, files = files_dict)
-        else:
-            req2 = requests.post(
-                url=f"{self.api_endpoint}/channels/{channel_id}/messages",
-                headers=self.HEADERS, json=payload)
-        if req2.status_code != 200:
-            self.log('trace',
-            f"req status code : {req2.status_code}" + \
-            f"\nreq text : {req2.text}\nHeaders : {req2.headers}")
 
     def heartbeat(self):
         self.log('debug', "Heartbeat started")
