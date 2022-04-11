@@ -100,9 +100,9 @@ def main():
     elif message == "!scan":
         attachments = messenger.getAttachments()
         if len(attachments) == 0:
-            messenger.send_message(channel_id, "Please add a file to scan.")
+            messenger.send_message(channel_id, "Please add a file to scan.", guild_id, message_id)
         else:
-            messenger.send_message(channel_id, "Scanning ...", message_id, guild_id)
+            messenger.send_message(channel_id, "Scanning ...", guild_id, message_id)
             threads_list = []
             for i in range(len(attachments)):
                 threads_list.append(Thread(target=Vtscan(conf["Vt_api_key"], messenger, attachments[i]["url"], channel_id, message_id, guild_id).scan))
