@@ -242,7 +242,7 @@ class Messenger:
             try:
                 event = self.get_message()
             except:
-                self.send_message(self.channelId, "Help, I'm dying")
+                #self.send_message(self.channelId, "Help, I'm dying")
                 self.log('debug', "Help, I'm dying")
                 self.reconnect()
             try :
@@ -272,7 +272,6 @@ class Messenger:
                 self.log('trace', f"event : {event}")
             elif event['t'] == "MESSAGE_REACTION_ADD":
                 self.reaction_handling(event['d'])
-                self.get_all_infos(event)
         elif op_code == 1:
             self.send_heartbeat()
             self.log('trace', f"event : {event}")
