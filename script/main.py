@@ -28,60 +28,68 @@ def help_message(channel_id):
     messenger.send_message(channel_id, help_message)
 
 def movie_search(search, channel_id, guild_id = None, message_id = None):
-    movies.search_movie(search, channel_id)
-
-    title = movies.get_title()
-    description = movies.get_description()
-    media_id = movies.get_media_id()
-    media_type = movies.get_media_type()
-    poster = movies.get_poster()
-
-
-    if not(title and description and media_id and media_type and poster):
-        return False
-
-    with open(f"movies/{title}.png" , "wb") as file:
-        file.write(poster)
-        logger.log('debug', "file written sucessfully")
-
-    message = f"Title : {title}\nDescription : {description}"
-
-    embed_params = {
-        'title' : 'Adding a movie',
-        'description' : 'Is it this movie ?',
-        'color' : 13632027,
-        'fields' : [{'name' : 'Title', 'value' : title},
-                    {'name' : 'Description', 'value' : description}]
-    }
-
-    logger.log('trace', f"Embeds parameters : {embed_params}")
-
-    messenger.send_embed(channel_id, embed_params)
-    messenger.send_files(channel_id, [f"movies/{title}.png"], guild_id, message_id)
-
-    message_id = messenger.getMessageId()
-    sleep(1)
-
-    messenger.send_reaction(channel_id, message_id, "✅")
-    messenger.send_reaction(channel_id, message_id, "❌")
-
-    sleep(1)
-
-    messenger.set_reaction_added(None)
-
-    reaction = messenger.get_reaction_added()
-    for i in range(10):
-        reaction = messenger.get_reaction_added()
-        if reaction:
+    keep_trying = True
+    i = 0
+    while keep_trying:
+        i = movies.search_movie(search, channel_id, i)
+        if i == -1:
+            keep_trying = False
             break
+
+        title = movies.get_title()
+        description = movies.get_description()
+        media_id = movies.get_media_id()
+        media_type = movies.get_media_type()
+        poster = movies.get_poster()
+
+
+        if not(title and description and media_id and media_type and poster):
+            return False
+
+        with open(f"movies/{title}.png" , "wb") as file:
+            file.write(poster)
+            logger.log('debug', "file written sucessfully")
+
+        message = f"Title : {title}\nDescription : {description}"
+
+        embed_params = {
+            'title' : 'Adding a movie',
+            'description' : 'Is it this movie ?',
+            'color' : 13632027,
+            'fields' : [{'name' : 'Title', 'value' : title},
+                        {'name' : 'Description', 'value' : description}]
+        }
+
+        logger.log('trace', f"Embeds parameters : {embed_params}")
+
+        messenger.send_embed(channel_id, embed_params)
+        messenger.send_files(channel_id, [f"movies/{title}.png"], guild_id, message_id)
+
+        message_id = messenger.getMessageId()
         sleep(1)
-    if reaction == "✅":
-        messenger.send_message(channel_id, "Ok adding this movie")
-        message = movies.add_movie(media_type, media_id, conf['plex_location'])
-        messenger.send_message(channel_id, message)
-    elif reaction == "❌":
-        messenger.send_message(channel_id, "My bad come back later when I'm improved")
-    messenger.set_reaction_added(None)
+
+        messenger.send_reaction(channel_id, message_id, "✅")
+        messenger.send_reaction(channel_id, message_id, "❌")
+
+        sleep(1)
+
+        messenger.set_reaction_added(None)
+
+        reaction = messenger.get_reaction_added()
+        for i in range(10):
+            reaction = messenger.get_reaction_added()
+            if reaction:
+                break
+            sleep(1)
+        if reaction == "✅":
+            messenger.send_message(channel_id, "Ok adding this movie.")
+            message = movies.add_movie(media_type, media_id, conf['plex_location'])
+            messenger.send_message(channel_id, message)
+            keep_trying = False
+        elif reaction == "❌":
+            messenger.send_message(channel_id, "Maybe something else.")
+            i += 1
+        messenger.set_reaction_added(None)
 
 
 def main():
@@ -148,7 +156,7 @@ def set_status():
     pass
 
 if __name__ == '__main__':
-    logger = Logger('debug')
+    logger = Logger('info')
     conf = Conf("config/config.json").load()
     logger.log('special', '\n\n\n\n\n')
     writer = Writer("shopping_list/shopping_list.json")

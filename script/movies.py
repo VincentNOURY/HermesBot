@@ -61,46 +61,57 @@ class Movies:
             self.log('error', req.text)
             raise
 
-    def search_movie(self, movie_name, channel_id):
+    def search_movie(self, movie_name, channel_id, i = 0):
         url = f"{self.overseerr_url}/search?query={movie_name}&page=1"
         req = self.session.get(url = url)
         if req.status_code == 200:
             json_result = json.loads(req.text)
             results = json_result['results']
 
-            if results:
-                self.log('trace', results[0])
+            for index, result in enumerate(results):
+                if index >= i and result['mediaType'] == 'movie':
+                    i = index
+                    break
 
-                title = results[0]['originalTitle']
-                description = results[0]['overview']
-                if not description:
-                    description = "Nothing found"
-                poster_path = results[0]['posterPath']
-                media_type = results[0]['mediaType']
-
-                media_id = results[0]['id']
-
-                if media_id != None: media_id = int(media_id)
-
-
-                poster = self.session.get(f"https://image.tmdb.org/t/p/w600_and_h900_bestv2{poster_path}").content
-
-                self.title = title
-                self.description = description
-                self.media_id = media_id
-                self.media_type = media_type
-                self.poster = poster
-            else:
-                self.messenger.send_message(channel_id, "No results")
-                self.log('error', "No results")
-                self.title = None
-                self.description = None
-                self.media_id = None
-                self.media_type = None
-                self.poster = None
+            self.movie_treatment(results, i)
+            return i
         else:
             self.log('error', "Couldn't get a response from the server")
+            return -1
             raise
+
+
+    def movie_treatment(self, results, i):
+        if results:
+            self.log('trace', results[i])
+
+            title = results[i]['originalTitle']
+            description = results[i]['overview']
+            if not description:
+                description = "Nothing found"
+            poster_path = results[i]['posterPath']
+            media_type = results[i]['mediaType']
+
+            media_id = results[i]['id']
+
+            if media_id != None: media_id = int(media_id)
+
+
+            poster = self.session.get(f"https://image.tmdb.org/t/p/w600_and_h900_bestv2{poster_path}").content
+
+            self.title = title
+            self.description = description
+            self.media_id = media_id
+            self.media_type = media_type
+            self.poster = poster
+        else:
+            self.messenger.send_message(channel_id, "No results")
+            self.log('error', "No results")
+            self.title = None
+            self.description = None
+            self.media_id = None
+            self.media_type = None
+            self.poster = None
 
     def add_movie(self, media_type, media_id, root_folder):
         url = self.overseerr_url + "/request"
