@@ -1,69 +1,169 @@
-import requests
+"""
+Movies module is used to retreive infos from and add a film to overseerr.
+
+Args:
+    overseerr_url: Url of the overseerr serverr
+    plex_token: The token of your plex account
+    logger: An instance of the logger module
+    messenger: An instance of the messenger module
+"""
+
+import sys
 import json
+import requests
+
 
 class Movies:
+    """
+    Movies module is used to retreive infos from and add a film to overseerr.
+
+    Args:
+        overseerr_url: Url of the overseerr serverr
+        plex_token: The token of your plex account
+        logger: An instance of the logger module
+        messenger: An instance of the messenger module
+    """
 
     def __init__(
         self,
-        #API_KEY : str,
-        overseerr_url : str,
-        #connection_endpoint : str,
-        PLEX_TOKEN : str,
+        overseerr_url: str,
+        plex_token: str,
         logger,
         messenger
     ):
+        """
+        Movies module is used to retreive infos from and add a film to
+        overseerr.
 
-        #self.API_KEY = API_KEY
+        Args:
+            overseerr_url: Url of the overseerr serverr
+            plex_token: The token of your plex account
+            logger: An instance of the logger module
+            messenger: An instance of the messenger module
+        """
+
         self.overseerr_url = overseerr_url
-        self.connection_endpoint = "/auth/plex"
-        self.PLEX_TOKEN = PLEX_TOKEN
-        self.HEADERS = {"accept" : "application/json"}
-
+        self.plex_token = plex_token
         self.log = logger.log
+        self.messenger = messenger
 
-        self.title = None
-        self.description = None
-        self.media_id = None
-        self.media_type = None
-        self.poster = None
+        self.infos = {'title':       None,
+                      'description': None,
+                      'media_id':    None,
+                      'media_type':  None,
+                      'poster':      None}
 
         self.session = requests.Session()
-        self.messenger = messenger;
 
         self.connect()
 
     def get_title(self):
-        return self.title
+        """
+        Returns the title of the last movie searched.
+
+        Args:
+            None
+
+        Returns:
+            self.infos['title']: The title of the last movie searched.
+        """
+
+        return self.infos['title']
 
     def get_description(self):
-        return self.description
+        """
+        Returns the description of the last movie searched.
+
+        Args:
+            None
+
+        Returns:
+            self.infos['description']: The description of the last movie
+                                       searched.
+        """
+
+        return self.infos['description']
 
     def get_media_id(self):
-        return self.media_id
+        """
+        Returns the media id of the last movie searched.
+
+        Args:
+            None
+
+        Returns:
+            self.infos['media_id']: The media id of the last movie searched.
+        """
+
+        return self.infos['media_id']
 
     def get_media_type(self):
-        return self.media_type
+        """
+        Returns the media type of the last movie searched.
+
+        Args:
+            None
+
+        Returns:
+            self.infos['media_type']: The media type of the last movie
+                                      searched.
+        """
+
+        return self.infos['media_type']
 
     def get_poster(self):
-        return self.poster
+        """
+        Returns the poster of the last movie searched.
 
+        Args:
+            None
+
+        Returns:
+            self.infos['poster']: The poster of the last movie searched.
+        """
+
+        return self.infos['poster']
 
     def connect(self):
-        self.log('none', "Logging in ...")
-        payload = {"authToken" : self.PLEX_TOKEN}
+        """
+        Connects to the overseerr server (sets the session
+        necessary for the requests).
 
-        req = self.session.post(self.overseerr_url + self.connection_endpoint,
-            headers = self.HEADERS, json = payload)
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
+        self.log('none', "Logging in ...")
+        payload = {"authToken": self.plex_token}
+        headers = {"accept": "application/json"}
+
+        req = self.session.post(self.overseerr_url + "/auth/plex",
+                                headers=headers, json=payload)
         if req.status_code == 200:
             self.log('none', "Logged in")
         else:
             self.log('error', "You are not logged in please check your token")
             self.log('error', req.text)
-            raise
+            sys.exit()
 
-    def search_movie(self, movie_name, channel_id, i = 0):
+    def search_movie(self, movie_name: str, i=0):
+        """
+        Searches for a movie with its name.
+
+        Args:
+            movie_name: Name of the movie to search.
+            i: index at which the search should start
+                (used if the result sent before is not the right one).
+
+        Returns:
+            Integer: index of the last movie found or -1 if no movie is found.
+        """
+
         url = f"{self.overseerr_url}/search?query={movie_name}&page=1"
-        req = self.session.get(url = url)
+        req = self.session.get(url=url)
         if req.status_code == 200:
             json_result = json.loads(req.text)
             results = json_result['results']
@@ -73,53 +173,77 @@ class Movies:
                     i = index
                     break
 
-            self.movie_treatment(results, i)
+            if self.movie_treatment(results[i]):
+                self.log('error', "Treatment failed")
+                return -1
             return i
-        else:
-            self.log('error', "Couldn't get a response from the server")
-            return -1
-            raise
+        self.log('error', "Couldn't get a response from the server")
+        return -1
 
+    def movie_treatment(self, result):
+        """
+        Gets all the infos from a given movie.
 
-    def movie_treatment(self, results, i):
-        if results:
-            self.log('trace', results[i])
+        Args:
+            result: Name of the movie to search.
 
-            title = results[i]['originalTitle']
-            description = results[i]['overview']
+        Returns:
+            String: Returns if there are no results and None if there are.
+        """
+
+        if result:
+            self.log('trace', result)
+
+            title = result['originalTitle']
+            description = result['overview']
             if not description:
                 description = "Nothing found"
-            poster_path = results[i]['posterPath']
-            media_type = results[i]['mediaType']
+            poster_path = result['posterPath']
+            media_type = result['mediaType']
 
-            media_id = results[i]['id']
+            media_id = result['id']
 
-            if media_id != None: media_id = int(media_id)
+            if media_id is not None:
+                media_id = int(media_id)
+            poster_path = "https://image.tmdb.org/t/p/w600_and_h900_bestv2" + \
+                          poster_path
 
+            poster = self.session.get(poster_path).content
 
-            poster = self.session.get(f"https://image.tmdb.org/t/p/w600_and_h900_bestv2{poster_path}").content
-
-            self.title = title
-            self.description = description
-            self.media_id = media_id
-            self.media_type = media_type
-            self.poster = poster
-        else:
-            self.messenger.send_message(channel_id, "No results")
-            self.log('error', "No results")
-            self.title = None
-            self.description = None
-            self.media_id = None
-            self.media_type = None
-            self.poster = None
+            self.infos['title'] = title
+            self.infos['description'] = description
+            self.infos['media_id'] = media_id
+            self.infos['media_type'] = media_type
+            self.infos['poster'] = poster
+            return None
+        self.log('error', "No results")
+        self.infos['title'] = None
+        self.infos['description'] = None
+        self.infos['media_id'] = None
+        self.infos['media_type'] = None
+        self.infos['poster'] = None
+        return "No results"
 
     def add_movie(self, media_type, media_id, root_folder):
+        """
+        Searches for a movie with its name.
+
+        Args:
+            media_type: Type of media.
+            media_id: Tmdb / tvdb id of a given media.
+            root_folder: root_folder of Plex.
+
+        Returns:
+            String: A string ment to be outputed to represent the action
+                    performed regarding the status of that particular movie.
+        """
+
         url = self.overseerr_url + "/request"
 
         payload = {
           "mediaType": media_type,
           "mediaId": media_id,
-          #"tvdbId": tvdb_id,
+          # "tvdbId": tvdb_id,
           "seasons": [
             0
           ],
@@ -131,16 +255,18 @@ class Movies:
           "userId": 0
         }
 
-        req = self.session.post(url = url, headers = self.HEADERS, json = payload)
+        headers = {"accept": "application/json"}
+
+        req = self.session.post(url=url, headers=headers, json=payload)
         if req.status_code == 201:
             self.log('debug', "movie added")
             self.log('trace', req.text)
             return "Movie added"
-        elif req.status_code == 500:
+        if req.status_code == 500:
             self.log('debug', "Movie already available")
             return "Movie already available"
-        elif req.status_code == 409:
+        if req.status_code == 409:
             self.log('debug', "Already asked")
             return "Already asked"
-        else:
-            self.log('error', f"status code {req.status_code} : {req.text}")
+        self.log('error', f"status code {req.status_code} : {req.text}")
+        return "An error as occured, can't add movie"

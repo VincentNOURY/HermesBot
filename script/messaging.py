@@ -1,55 +1,128 @@
-import requests
+"""
+Core module of discord bot, it connects, keeps alive, get messages and send
+messages.
+
+Args:
+    token: Discord bot token.
+    logger: An instance of the logging module.
+"""
+
 import json
 from time import sleep
-import sys
-from random import randint
+from threading import Thread
+import socket
 
+import requests
 import websocket
-import threading
 
 
 class Messenger:
+    """
+    Core module of discord bot, it connects, keeps alive, get messages and send
+    messages.
 
-    def __init__(self, TOKEN, logger):
-        self.TOKEN = TOKEN
-        self.api_endpoint = "https://discord.com/api/v9"
-        self.url = "wss://gateway.discord.gg/?v=9&encoding=json"
-        self.HEADERS = {
-            "Authorization" : f"Bot {TOKEN}",
-            "Content-Type" : "Application/json"
-        }
-        self.ATTACHMENTS_HEADERS = {
-            "Authorization" : f"Bot {TOKEN}"
-        }
-        self.ws = websocket.WebSocket()
-        self.message = ""
-        self.channelId = ""
-        self.message_id = ""
-        self.guild_id = ""
-        self.author = {'username' : 'VTBot',
-                        'id' : "948058941668069386"}
-        self.attachments = []
+    Args:
+        token: Discord bot token.
+        logger: An instance of the logging module.
+    """
+
+    infos = {'message':        None,
+             'channel_id':     None,
+             'message_id':     None,
+             'guild_id':       None,
+             'reaction_added': None,
+             'seq':            0,
+             'session_id':     None}
+
+    author = {'username': 'VTBot',
+              'id': "948058941668069386"}
+    api_endpoint = "https://discord.com/api/v9"
+    url = "wss://gateway.discord.gg/?v=9&encoding=json"
+    attachments = []
+
+    def __init__(self, token, logger):
+        """
+        Core module of discord bot, it connects, keeps alive, get messages and
+        send messages.
+
+        Args:
+            token: Discord bot token.
+            logger: An instance of the logging module.
+        """
+
+        self.token = token
         self.log = logger.log
-        self.seq = 0
-        self.session_id = ""
-        self.reaction_added = None
 
-    def get_message(self):
-        message = self.ws.recv()
+        self.heartbeat_interval = 42
+        self.web_socket = websocket.WebSocket()
+
+    def __get_message(self):
+        """
+        Gets the messages (event) sent by discord.
+
+        Args:
+            None
+
+        Returns:
+            Dictionnary: The event sent by discord.
+        """
+
+        message = self.web_socket.recv()
         if message:
             return json.loads(message)
+        return {}
 
-    def get_reaction_added(self):
-        return self.reaction_added
+    def get_reaction_added(self) -> str:
+        """
+        Returns the last reaction.
+
+        Args:
+            None
+
+        Returns:
+            String: The last reaction added.
+        """
+
+        return self.infos['reaction_added']
 
     def set_reaction_added(self, reaction):
-        self.reaction_added = reaction
+        """
+        Sets the last reaction added.
+
+        Args:
+            reaction: The reaction to set.
+
+        Returns:
+            None
+        """
+
+        self.infos['reaction_added'] = reaction
 
     def send_reaction(self, channel_id, message_id, reaction):
+        """
+        Sends a reaction to a message.
+
+        Args:
+            channel_id: The id of the channel the message to react
+                        is located in.
+            message_id: The id of the message to react to.
+            reaction: The reaction to add.
+
+        Returns:
+            None
+        """
+
+        headers = {
+            "Authorization": f"Bot {self.token}",
+            "Content-Type":  "Application/json"
+        }
+
         req = requests.put(
-        url = f"{self.api_endpoint}/channels/{channel_id}/messages/{message_id}/reactions/{reaction}/@me",
-        headers = self.HEADERS)
-        self.log('trace', f"Status code : {req.status_code}\nText : {req.text}")
+                            url=f"{self.api_endpoint}/channels/{channel_id}" +
+                            f"/messages/{message_id}/reactions/{reaction}/@me",
+                            headers=headers)
+        self.log('trace',
+                 f"Status code : {req.status_code}\nText : {req.text}")
         if req.status_code == 429:
             self.log('error', "Rate limited")
             sleep(0.5)
@@ -57,18 +130,43 @@ class Messenger:
             self.send_reaction(channel_id, message_id, reaction)
         elif req.status_code != 204:
             self.log('error', "An error as occured")
-            self.log('error', f"Status code : {req.status_code}\nText : {req.text}")
-
+            self.log('error',
+                     f"Status code : {req.status_code}\nText : {req.text}")
 
     def send_embed(
         self,
         channel_id,
         embed_params,
-        guild_id = None,
-        message_id = None
+        guild_id=None,
+        message_id=None
     ):
+        """
+        Sends an embeded message.
 
-        fields = [{'name' : field['name'], 'value' : field['value']} for field in embed_params['fields']]
+        Args:
+            channel_id: The id of the channel to send the message in.
+            embed_params: The necessary parameters for an embeded message.
+            e.g: embed_params = {
+                    'title': 'foo',
+                    'description': 'bar',
+                    'color': int,
+                    'fields': [{'name': 'Name of field 1', 'value': 'value'},
+                               {'name': 'Name of field n', 'value': 'value'}]
+                    }
+            guild_id (Optional): The id of the guild the message is located in.
+            message_id (Optional): The id of the message to respond to
+
+        Returns:
+            None
+        """
+
+        headers = {
+            "Authorization": f"Bot {self.token}",
+            "Content-Type":  "Application/json"
+        }
+
+        fields = [{'name': field['name'], 'value': field['value']}
+                  for field in embed_params['fields']]
         payload = {
               "content": "",
               "embed": {
@@ -80,52 +178,99 @@ class Messenger:
                 }
             }
 
+        if message_id and guild_id:
+            payload['message_reference'] = {
+                "guild_id": guild_id,
+                "message_id": message_id
+                }
+
         request = requests.post(
             url=f"{self.api_endpoint}/channels/{channel_id}/messages",
-            headers=self.HEADERS, json=payload)
+            headers=headers, json=payload)
         self.status_code_checker(request)
 
     def send_files(
         self,
-        channel_id,
-        files,
-        guild_id = None,
-        message_id = None
+        channel_id: str,
+        files: list
     ):
+        """
+        Sends a file (cannot respond to a message).
+
+        Args:
+            channel_id: The id of the channel to send the message in.
+            files: List of file paths.
+
+        Returns:
+            None
+        """
+
+        attachments_headers = {
+            "Authorization": f"Bot {self.token}"
+        }
 
         payload = []
         files_dict = {}
         for index, file in enumerate(files):
             filename = file.split("/")[-1]
             payload.append({
-                'Content-Disposition': 'form-data; ' + \
+                'Content-Disposition': 'form-data; ' +
                 f'name="file{index}"; filename="{filename}"',
                 'Content-Type': 'image/png',
             })
-            files_dict[f"file{index}"] = open(file, 'rb')
+            with open(file, 'rb') as file:
+                files_dict[f"file{index}"] = \
+                    (filename, file.read(), 'image/png')
         request = requests.post(
             url=f"{self.api_endpoint}/channels/{channel_id}/messages",
-            headers=self.ATTACHMENTS_HEADERS, data = payload, files = files_dict)
+            headers=attachments_headers, data=payload, files=files_dict)
         self.status_code_checker(request)
 
     def status_code_checker(self, request):
+        """
+        Checks if the HTTP code received indicates a success or not.
+
+        Args:
+            request: the reponse from your HTTP request
+
+        Returns:
+            Boolean: True if the status code is 200
+        """
+
         if request.status_code != 200:
             self.log('trace',
-            f"req status code : {req2.status_code}" + \
-            f"\nreq text : {req2.text}\nHeaders : {req2.headers}")
-
+                     f"req status code: {request.status_code}" +
+                     f"\nreq text: {request.text}\nHeaders: {request.headers}")
+        return request.status_code == 200
 
     def send_message(
         self,
         channel_id,
         message,
-        guild_id = None,
-        message_id = None,
-        files = None
+        guild_id=None,
+        message_id=None
     ):
+        """
+        Sends an classic message.
+
+        Args:
+            channel_id: The id of the channel to send the message in.
+            embed_params: The necessary parameters for an embeded message.
+            message: A string to send as a message.
+            guild_id (Optional): The id of the guild the message is located in.
+            message_id (Optional): The id of the message to respond to
+
+        Returns:
+            None
+        """
+
+        headers = {
+            "Authorization": f"Bot {self.token}",
+            "Content-Type":  "Application/json"
+        }
 
         payload = {"channel_id": channel_id,
-                "content": message}
+                   "content": message}
 
         if message_id and guild_id:
             payload['message_reference'] = {
@@ -135,123 +280,271 @@ class Messenger:
 
         request = requests.post(
             url=f"{self.api_endpoint}/channels/{channel_id}/messages",
-            headers=self.HEADERS, json=payload)
+            headers=headers, json=payload)
         self.status_code_checker(request)
 
+    def __heartbeat(self):
+        """
+        Loops to send heartbeats (to keep the bot alive).
 
-    def heartbeat(self):
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         self.log('debug', "Heartbeat started")
         while True:
-            self.send_heartbeat()
+            self.__send_heartbeat()
             sleep(self.heartbeat_interval)
 
-    def send_heartbeat(self):
-        heartbeat_JSON = {
-        "op" : 1,
-        "d" : "null"
-        }
+    def __send_heartbeat(self):
+        """
+        Sends a heartbeat.
 
-        self.ws.send(json.dumps(heartbeat_JSON))
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
+        heartbeat_json = {"op": 1,
+                          "d": "null"}
+
+        self.web_socket.send(json.dumps(heartbeat_json))
         self.log('debug', "Heartbeat sent")
 
+    def get_author_username(self) -> str:
+        """
+        Returns the username of the Author.
 
+        Args:
+            None
 
-    def getAuthorUsername(self):
+        Returns:
+            String: Username of the author of the last message.
+        """
+
         return self.author['username']
 
-    def getAuthorId(self):
+    def get_author_id(self) -> str:
+        """
+        Returns the id of the Author.
+
+        Args:
+            None
+
+        Returns:
+            String: Id of the author of the last message.
+        """
+
         return self.author['id']
 
-    def getMessage(self):
-        return self.message
+    def get_message(self) -> str:
+        """
+        Returns the last message.
 
-    def getChannelId(self):
-        return self.channelId
+        Args:
+            None
 
-    def getAttachments(self):
+        Returns:
+            String: Last message received.
+        """
+
+        return self.infos['message']
+
+    def get_channel_id(self):
+        """
+        Returns the username of the Author.
+
+        Args:
+            None
+
+        Returns:
+            String: Username of the author of the last message.
+        """
+
+        return self.infos['channel_id']
+
+    def get_attachments(self) -> list:
+        """
+        Returns the attachments of the last message.
+
+        Args:
+            None
+
+        Returns:
+            List: List of the attachments of the last message.
+        """
+
         return self.attachments
 
-    def getMessageId(self):
-        return self.message_id
+    def get_message_id(self) -> str:
+        """
+        Returns the id of the last message.
 
-    def getGuildId(self):
-        return self.guild_id
+        Args:
+            None
 
-    def get_all_infos(self, event):
+        Returns:
+            String: Id of the last message.
+        """
+
+        return self.infos['message_id']
+
+    def get_guild_id(self) -> str:
+        """
+        Returns the guild id of the last message.
+
+        Args:
+            None
+
+        Returns:
+            String: Id of the last message.
+        """
+
+        return self.infos['guild_id']
+
+    def __get_all_infos(self, event):
+        """
+        Retreives all of the informations of a givent event.
+
+        Args:
+            event: Event received from Discord.
+
+        Returns:
+            None
+        """
+
         if event['t'] == "MESSAGE_CREATE":
             self.author = event['d']['author']
-            self.message = event['d']['content']
-            self.channelId = event['d']['channel_id']
+            self.infos['message'] = event['d']['content']
+            self.infos['channel_id'] = event['d']['channel_id']
             self.attachments = event['d']['attachments']
-            self.message_id = event['d']['id']
-            self.guild_id = event['d']['guild_id']
-            self.log('debug', f"{self.author['username']} : {self.message}")
-        if event['s'] != None:
-            self.seq = event['s']
+            self.infos['message_id'] = event['d']['id']
+            self.infos['guild_id'] = event['d']['guild_id']
+            self.log('debug',
+                     f"{self.author['username']} : {self.infos['message']}")
+        if event['s'] is not None:
+            self.infos['seq'] = event['s']
 
-    def connect(self):
+    def __connect(self):
+        """
+        Connects the bot to the discord websocket.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         self.log('none', "Connecting")
-        self.ws.connect(self.url)
-        event = self.get_message()
+        self.web_socket.connect(self.url)
+        event = self.__get_message()
         self.heartbeat_interval = event['d']['heartbeat_interval'] / 1000
         self.log('none', f"Heartbeat interval : {self.heartbeat_interval}")
         self.log('none', "Connected")
 
     def reconnect(self):
+        """
+        Reconnects to the Discord websocket (can be bacause the connection
+        was lost or if a op code 7 is received).
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         self.log("debug", "Reconnecting")
-        self.ws.close()
+        self.web_socket.close()
         self.log("trace", "Connectiong closed")
-        self.connect()
+        self.__connect()
 
         payload = {
           "op": 6,
           "d": {
-            "token": self.TOKEN,
-            "session_id": self.session_id,
-            "seq": self.seq
+            "token": self.token,
+            "session_id": self.infos['session_id'],
+            "seq": self.infos['seq']
           }
         }
 
-        self.ws.send(json.dumps(payload))
-        message = self.get_message()
-        self.op_code_treatment(message)
-        self.get_all_infos(message)
+        self.web_socket.send(json.dumps(payload))
+        message = self.__get_message()
+        self.__op_code_treatment(message)
+        self.__get_all_infos(message)
         self.log('debug', "Reconnected")
 
-    def identify(self):
+    def __identify(self):
+        """
+        Identifies the bot.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         payload = {
           "op": 2,
           "d": {
-            "token": self.TOKEN,
+            "token": self.token,
             "intents": 1544,
-            "properties" : {
-                "$os" : "linux",
-                "$browser" : "VTBot",
-                "$device" : "VTBot"
+            "properties": {
+                "$os": "linux",
+                "$browser": "VTBot",
+                "$device": "VTBot"
             }
           }
         }
 
-        self.ws.send(json.dumps(payload))
-        message = self.get_message()
-        self.op_code_treatment(message)
-        self.get_all_infos(message)
+        self.web_socket.send(json.dumps(payload))
+        message = self.__get_message()
+        self.__op_code_treatment(message)
+        self.__get_all_infos(message)
 
-    def core(self):
+    def __core(self):
+        """
+        Core of the discord bot gets the messages and sends them to
+        op_code_treatment() or get_all_infos() (while True loop).
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         while True:
             try:
-                event = self.get_message()
-            except:
-                #self.send_message(self.channelId, "Help, I'm dying")
-                self.log('debug', "Help, I'm dying")
+                event = self.__get_message()
+            except socket.error as socket_error:
+                self.log('debug', "Help, I'm dying" +
+                         f"Exception: {socket_error}")
                 self.reconnect()
-            try :
-                self.op_code_treatment(event)
-                self.get_all_infos(event)
-            except:
-                pass
+            try:
+                self.__op_code_treatment(event)
+                self.__get_all_infos(event)
+            except KeyError as error:
+                self.log('error', f"key not found error : {error}")
 
-    def op_code_treatment(self, event): # A faire get_all_infos from op_code_treatment
+    def __op_code_treatment(self, event):
+        """
+        Handles the op codes received.
+
+        Args:
+            event: event received by discord.
+
+        Returns:
+            None
+        """
+
         op_code = event['op']
         self.log('trace', event)
         if op_code == 11:
@@ -260,7 +553,7 @@ class Messenger:
         elif op_code == 9:
             self.log('debug', "Re-identifying")
             self.log('trace', f"event : {event}")
-            self.identify()
+            self.__identify()
         elif op_code == 7:
             self.log('debug', "op code 7 received")
             self.reconnect()
@@ -268,23 +561,60 @@ class Messenger:
             if event['t'] == "GUILD_CREATE":
                 pass
             elif event['t'] == "READY":
-                self.session_id = event['d']['session_id']
+                self.infos['session_id'] = event['d']['session_id']
                 self.log('trace', f"event : {event}")
             elif event['t'] == "MESSAGE_REACTION_ADD":
-                self.reaction_handling(event['d'])
+                self.__reaction_handling(event['d'])
         elif op_code == 1:
-            self.send_heartbeat()
+            self.__send_heartbeat()
             self.log('trace', f"event : {event}")
-        self.get_all_infos(event)
+        self.__get_all_infos(event)
 
-    def reaction_handling(self, data):
+    def __reaction_handling(self, data):
+        """
+        Handles the reactions to message.
+
+        Args:
+            data: event['d'] received by discord
+
+        Returns:
+            None
+        """
+
         self.log('trace', f"emoji received {data['emoji']['name']}")
-        self.reaction_added = data['emoji']['name']
+        self.infos['reaction_added'] = data['emoji']['name']
+
+    def set_message(self, message):
+        """
+        Sets the last message received
+
+        Args:
+            message: message to be set
+
+        Returns:
+            None
+        """
+
+        self.infos['message'] = message
 
     def start(self):
-        self.connect()
-        threading._start_new_thread(self.heartbeat, ())
+        """
+        Entrypoint of the class, starts the bot.
 
-        self.identify()
+        Args:
+            None
 
-        threading._start_new_thread(self.core, ())
+        Returns:
+            None
+        """
+
+        self.__connect()
+        # threading._start_new_thread(self.__heartbeat, ())
+        heart = Thread(target=self.__heartbeat)
+        heart.start()
+
+        self.__identify()
+
+        # threading._start_new_thread(self.__core, ())
+        start_core = Thread(target=self.__core)
+        start_core.start()

@@ -2,3 +2,4 @@
 config/config.json
 script/__pycache__
 movies
+scan
