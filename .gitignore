@@ -3,3 +3,4 @@ config/config.json
 script/__pycache__
 movies
 scan
+shopping_list
