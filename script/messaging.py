@@ -67,10 +67,15 @@ class Messenger:
             Dictionnary: The event sent by discord.
         """
 
-        message = self.web_socket.recv()
-        if message:
-            return json.loads(message)
-        return {}
+        try:
+            message = self.web_socket.recv()
+            if message:
+                return json.loads(message)
+            return {}
+        except socket.error as socket_error:
+            self.log('error', f"Socket error : {socket_error}")
+            self.reconnect()
+            return {}
 
     def get_reaction_added(self) -> str:
         """

@@ -17,8 +17,8 @@ from vtscan import Vtscan
 from writer import Writer
 from logger import Logger
 from read_conf import Conf
-from movies import Movies
 from shopping_list import ShoppingList
+from movies import Movies
 
 
 def send_help_message(channel_id: str):
