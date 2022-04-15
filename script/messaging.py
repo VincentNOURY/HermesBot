@@ -10,7 +10,6 @@ Args:
 import json
 from time import sleep
 from threading import Thread
-import socket
 
 import requests
 import websocket
@@ -72,7 +71,7 @@ class Messenger:
             if message:
                 return json.loads(message)
             return {}
-        except socket.error as socket_error:
+        except websocket.WebSocketConnectionClosedException as socket_error:
             self.log('error', f"Socket error : {socket_error}")
             self.reconnect()
             return {}
@@ -529,9 +528,9 @@ class Messenger:
         while True:
             try:
                 event = self.__get_message()
-            except socket.error as socket_error:
+            except websocket.WebSocketConnectionClosedException as so_error:
                 self.log('debug', "Help, I'm dying" +
-                         f"Exception: {socket_error}")
+                         f"Exception: {so_error}")
                 self.reconnect()
             try:
                 self.__op_code_treatment(event)
