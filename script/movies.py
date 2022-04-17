@@ -167,16 +167,16 @@ class Movies:
         if req.status_code == 200:
             json_result = json.loads(req.text)
             results = json_result['results']
+            if results:
+                for index, result in enumerate(results):
+                    if index >= i and result['mediaType'] == 'movie':
+                        i = index
+                        break
 
-            for index, result in enumerate(results):
-                if index >= i and result['mediaType'] == 'movie':
-                    i = index
-                    break
-
-            if self.movie_treatment(results[i]):
-                self.log('error', "Treatment failed")
-                return -1
-            return i
+                if self.movie_treatment(results[i]):
+                    self.log('error', "Treatment failed")
+                    return -1
+                return i
         self.log('error', "Couldn't get a response from the server")
         return -1
 
