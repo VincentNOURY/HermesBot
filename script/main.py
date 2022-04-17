@@ -68,6 +68,8 @@ def movie_search(search, channel_id: str):
         i = movies.search_movie(search, i)
         if i == -1:
             keep_trying = False
+            message = "Something went wrong please check the name of the movie"
+            messenger.send_message(channel_id, message)
             break
 
         title = movies.get_title()
