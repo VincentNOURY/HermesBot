@@ -73,8 +73,7 @@ class Messenger:
             return {}
         except websocket.WebSocketConnectionClosedException as socket_error:
             self.log('error', f"Socket error : {socket_error}")
-            self.reconnect()
-            return {}
+            return None
 
     def get_reaction_added(self) -> str:
         """
@@ -448,9 +447,12 @@ class Messenger:
         self.log('none', "Connecting")
         self.web_socket.connect(self.url)
         event = self.__get_message()
-        self.heartbeat_interval = event['d']['heartbeat_interval'] / 1000
-        self.log('none', f"Heartbeat interval : {self.heartbeat_interval}")
-        self.log('none', "Connected")
+        if event is None:
+            self.reconnect()
+        else:
+            self.heartbeat_interval = event['d']['heartbeat_interval'] / 1000
+            self.log('none', f"Heartbeat interval : {self.heartbeat_interval}")
+            self.log('none', "Connected")
 
     def reconnect(self):
         """
