@@ -551,30 +551,31 @@ class Messenger:
             None
         """
 
-        op_code = event['op']
-        self.log('trace', event)
-        if op_code == 11:
-            self.log("debug", "heartbeat recieved")
-            self.log('trace', f"event : {event}")
-        elif op_code == 9:
-            self.log('debug', "Re-identifying")
-            self.log('trace', f"event : {event}")
-            self.__identify()
-        elif op_code == 7:
-            self.log('debug', "op code 7 received")
-            self.reconnect()
-        elif op_code == 0:
-            if event['t'] == "GUILD_CREATE":
-                pass
-            elif event['t'] == "READY":
-                self.infos['session_id'] = event['d']['session_id']
+        if event is not None:
+            op_code = event['op']
+            self.log('trace', event)
+            if op_code == 11:
+                self.log("debug", "heartbeat recieved")
                 self.log('trace', f"event : {event}")
-            elif event['t'] == "MESSAGE_REACTION_ADD":
-                self.__reaction_handling(event['d'])
-        elif op_code == 1:
-            self.__send_heartbeat()
-            self.log('trace', f"event : {event}")
-        self.__get_all_infos(event)
+            elif op_code == 9:
+                self.log('debug', "Re-identifying")
+                self.log('trace', f"event : {event}")
+                self.__identify()
+            elif op_code == 7:
+                self.log('debug', "op code 7 received")
+                self.reconnect()
+            elif op_code == 0:
+                if event['t'] == "GUILD_CREATE":
+                    pass
+                elif event['t'] == "READY":
+                    self.infos['session_id'] = event['d']['session_id']
+                    self.log('trace', f"event : {event}")
+                elif event['t'] == "MESSAGE_REACTION_ADD":
+                    self.__reaction_handling(event['d'])
+            elif op_code == 1:
+                self.__send_heartbeat()
+                self.log('trace', f"event : {event}")
+            self.__get_all_infos(event)
 
     def __reaction_handling(self, data):
         """
