@@ -420,18 +420,18 @@ class Messenger:
         Returns:
             None
         """
-
-        if event['t'] == "MESSAGE_CREATE":
-            self.author = event['d']['author']
-            self.infos['message'] = event['d']['content']
-            self.infos['channel_id'] = event['d']['channel_id']
-            self.attachments = event['d']['attachments']
-            self.infos['message_id'] = event['d']['id']
-            self.infos['guild_id'] = event['d']['guild_id']
-            self.log('debug',
-                     f"{self.author['username']} : {self.infos['message']}")
-        if event['s'] is not None:
-            self.infos['seq'] = event['s']
+        if event:
+            if event['t'] == "MESSAGE_CREATE":
+                self.author = event['d']['author']
+                self.infos['message'] = event['d']['content']
+                self.infos['channel_id'] = event['d']['channel_id']
+                self.attachments = event['d']['attachments']
+                self.infos['message_id'] = event['d']['id']
+                self.infos['guild_id'] = event['d']['guild_id']
+                self.log('debug',
+                        f"{self.author['username']} : {self.infos['message']}")
+            if event['s'] is not None:
+                self.infos['seq'] = event['s']
 
     def __connect(self):
         """
@@ -483,7 +483,6 @@ class Messenger:
         self.web_socket.send(json.dumps(payload))
         message = self.__get_message()
         self.__op_code_treatment(message)
-        self.__get_all_infos(message)
         self.log('debug', "Reconnected")
 
     def __identify(self):
@@ -513,7 +512,6 @@ class Messenger:
         self.web_socket.send(json.dumps(payload))
         message = self.__get_message()
         self.__op_code_treatment(message)
-        self.__get_all_infos(message)
 
     def __core(self):
         """
@@ -536,7 +534,6 @@ class Messenger:
                 self.reconnect()
             try:
                 self.__op_code_treatment(event)
-                self.__get_all_infos(event)
             except KeyError as error:
                 self.log('error', f"key not found error : {error}")
 
