@@ -73,6 +73,7 @@ class Messenger:
             return {}
         except websocket.WebSocketConnectionClosedException as socket_error:
             self.log('error', f"Socket error : {socket_error}")
+            self.reconnect()
             return None
 
     def get_reaction_added(self) -> str:
