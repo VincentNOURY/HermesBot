@@ -1,0 +1,8 @@
+{
+    "Delete this line": "Rename this file to config.json",
+    "Discord_token": "Discord Token here",
+    "Vt_api_key": "Virus total API key here",
+    "PLEX_TOKEN": "Plex token here",
+    "overseerr_endpoint": "overseerr url here/api/v1",
+    "plex_location": "location of the files known to overseerr"
+  }

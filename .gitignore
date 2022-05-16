@@ -4,3 +4,5 @@ script/__pycache__
 movies
 scan
 shopping_list
+package-lock.json
+node_modules

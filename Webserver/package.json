@@ -1,0 +1,29 @@
+{
+  "name": "hermesbot",
+  "version": "1.0.0",
+  "description": "HermesBot is a Discrod bot modular and easy to use",
+  "main": "app.js",
+  "scripts": {
+    "test": "nodemon app.js",
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VincentNOURY/HermesBot.git"
+  },
+  "keywords": [
+    "Discord",
+    "Bot"
+  ],
+  "author": "VincentNOURY",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/VincentNOURY/HermesBot/issues"
+  },
+  "homepage": "https://github.com/VincentNOURY/HermesBot#readme",
+  "dependencies": {
+    "ejs": "^3.1.8",
+    "express": "^4.18.1",
+    "nodemon": "^2.0.16"
+  }
+}
