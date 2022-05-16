@@ -266,7 +266,7 @@ class Messenger:
             "Content-Type":  "Application/json"
         }
         request = requests.get(
-            url=f"{self.api_endpoint}//channels/{channel_id}/messages",
+            url=f"{self.api_endpoint}/channels/{channel_id}/messages",
             headers=headers)
         return request.text
 

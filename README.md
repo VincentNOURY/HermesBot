@@ -8,6 +8,12 @@ HermesBot is a Discrod bot modular and easy to use
 python3 scrit/main.py
 ```
 
+With WebUI
+
+```bash
+./start.sh
+```
+
 ## Docker usage
 
 ```bash
