@@ -12,6 +12,7 @@ To do:
 """
 
 
+import json
 from time import sleep
 from save_thread_result import ThreadWithResult
 
@@ -144,6 +145,15 @@ def main():
 
     threads_list = []
     while True:
+        with open("interface/to_send.json", 'r', encoding='utf-8') as file:
+            json_object = json.load(file)
+            for object_to_send in json_object:
+                logger.log('error', f"Sending message to channel {object_to_send['channel_id']} with message {object_to_send['message']}")
+                messenger.send_message(object_to_send['channel_id'], object_to_send['message'])
+        
+        with open("interface/to_send.json", 'w', encoding='utf-8') as file:
+            file.write("[]")
+        
         message = messenger.get_message()
         if message:
             message = message.lower()
@@ -181,7 +191,8 @@ def main():
                                              guild_id))
 
                     for thread in threads_list:
-                        thread[0].start()
+                        if not thread[0].is_alive():
+                            thread[0].start()
 
             elif message == "!create":
                 shopping_list.create_shopping_list(channel_id)
