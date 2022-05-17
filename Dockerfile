@@ -8,5 +8,4 @@ RUN mkdir interface movies scan shopping_list
 RUN cd interface
 RUN echo "{}" > servers.json
 RUN cd ../..
-ENTRYPOINT ["python3"]
-CMD ["-u", "script/main.py"]
+CMD ["sh", "start.sh"]
