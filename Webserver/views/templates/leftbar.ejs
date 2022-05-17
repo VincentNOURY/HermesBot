@@ -2,8 +2,8 @@
     <% results.forEach(function(result) { %>
         <div>
             <a href="/server/<%= result.server_id %>"><img src="<%= result.server_image %>" alt="<%= result.server_name %>"></a>
-            <% result.channels.forEach(function(channel) { %>
-                <a href="/channel/<%= result.server_id %>/<%= channel.id %>"><p class="channel"><%= channel.name %></p></a>
+            <% Object.keys(result.channels).forEach(function(key) { %>
+                <a href="/channel/<%= result.server_id %>/<%= result.channels[key].id %>"><p class="channel"><%= result.channels[key].name %></p></a>
             <% }); %>
         </div>
     <% }); %>

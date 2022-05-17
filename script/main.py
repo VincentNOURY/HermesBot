@@ -145,15 +145,6 @@ def main():
 
     threads_list = []
     while True:
-        with open("interface/to_send.json", 'r', encoding='utf-8') as file:
-            json_object = json.load(file)
-            for object_to_send in json_object:
-                logger.log('error', f"Sending message to channel {object_to_send['channel_id']} with message {object_to_send['message']}")
-                messenger.send_message(object_to_send['channel_id'], object_to_send['message'])
-        
-        with open("interface/to_send.json", 'w', encoding='utf-8') as file:
-            file.write("[]")
-        
         message = messenger.get_message()
         if message:
             message = message.lower()

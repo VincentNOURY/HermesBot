@@ -247,28 +247,6 @@ class Messenger:
                      f"\nreq text: {request.text}\nHeaders: {request.headers}")
         return request.status_code == 200
 
-    def get_all_channels(self, guild_id):
-
-        headers = {
-            "Authorization": f"Bot {self.token}",
-            "Content-Type":  "Application/json"
-        }
-        request = requests.get(
-            url=f"{self.api_endpoint}/guilds/{guild_id}/channels",
-            headers=headers)
-        return request.text
-
-
-    def get_messages(self, channel_id):
-
-        headers = {
-            "Authorization": f"Bot {self.token}",
-            "Content-Type":  "Application/json"
-        }
-        request = requests.get(
-            url=f"{self.api_endpoint}/channels/{channel_id}/messages",
-            headers=headers)
-        return request.text
 
     def send_message(
         self,
@@ -455,29 +433,8 @@ class Messenger:
                 self.log('debug',
                         f"{self.author['username']} : {self.infos['message']}")
             elif event['t'] == "READY":
-                servers_list = {}
-                messages_list = {}
-                for guild in event['d']['guilds']:
-                    channels = json.loads(self.get_all_channels(guild['id']))
-                    channels_list = []
-                    for channel in channels:
-                        id = channel['id']
-                        name = channel['name']
-                        channels_list.append({"id": id, "name": name})
-                        messages = json.loads(self.get_messages(channel['id']))
-                        messages_temp = []
-                        for message in messages:
-                            if type(message) == dict and (("code" in message.keys() and message['code'] != 50001) or "code" not in message.keys()):
-                                author = message['author']['username']
-                                content = message['content']
-                                timestamp = message['timestamp']
-                                messages_temp.append({"author": author, "content": content,"date": timestamp})
-                        messages_list[guild['id']] = {channel['id']: messages_temp}
-                    servers_list[guild['id']] = {"server_name": "test", "channels": channels_list}
                 with open("interface/servers.json", 'w', encoding="UTF-8") as file:
-                    json.dump(servers_list, file)
-                with open("interface/messages.json", 'w', encoding="UTF-8") as file:
-                    json.dump(messages_list, file)
+                    json.dump([guild['id'] for guild in event['d']['guilds']], file)
                 self.log('none', "READY")
             if event['s'] is not None:
                 self.infos['seq'] = event['s']
