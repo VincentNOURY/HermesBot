@@ -56,20 +56,6 @@ function get_servers(){
     return JSON.parse(fs.readFileSync("../interface/servers.json", 'utf8'))
 }
 
-/*function send_message(server_id, channel_id, message){
-    let to_send_path = "../interface/to_send.json"
-    let newMessage = {server_id: server_id,
-                      channel_id: channel_id,
-                      message: message}
-    fs.readFile(to_send_path, function (err, data) {
-        let json = JSON.parse(data)
-        json.push(newMessage)
-  
-        fs.writeFile(to_send_path, JSON.stringify(json), function(err, result) {
-          if(err) console.log('error', err)})
-    })
-}*/
-
 async function send_message(channel_id, message){
     let url = `https://discord.com/api/v9//channels/${channel_id}/messages`
     let bot_token = process.env.discord_token || JSON.parse(fs.readFileSync("../config/config.json", 'utf8')).Discord_token

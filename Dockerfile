@@ -1,11 +1,10 @@
-FROM python:3.10-rc-buster
+FROM ubuntu
+RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y python3 python3-pip nodejs npm && apt-get clean
 WORKDIR /app
 COPY . /app
-RUN /usr/local/bin/python3 -m pip install --upgrade pip
+RUN python3.10 -m pip install --upgrade pip
 RUN pip3 install -r requirements.txt
+RUN cd Webserver
+RUN npm install
 RUN cd /app
-RUN mkdir interface movies scan shopping_list
-RUN cd interface
-RUN echo "{}" > servers.json
-RUN cd ../..
 CMD ["sh", "start.sh"]

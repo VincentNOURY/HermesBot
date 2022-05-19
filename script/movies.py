@@ -173,7 +173,7 @@ class Movies:
                         i = index
                         break
 
-                if self.movie_treatment(results[i]):
+                if i <= len(results) and self.movie_treatment(results[i]):
                     self.log('error', "Treatment failed")
                     return -1
                 return i
