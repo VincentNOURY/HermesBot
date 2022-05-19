@@ -4,7 +4,6 @@ WORKDIR /app
 COPY . /app
 RUN python3.10 -m pip install --upgrade pip
 RUN pip3 install -r requirements.txt
-RUN cd Webserver
-RUN npm install
+RUN cd Webserver && npm install
 RUN cd /app
 CMD ["sh", "start.sh"]
